@@ -14,11 +14,11 @@ export default function Form(props) {
   const history = useHistory();
   const { deckId, cardId } = useParams();
   const { newItem, isDeck } = props;
-  const [deck, setDeck] = useState({ cards: [] });
-  const [card, setCard] = useState({});
+  const [deck, setDeck] = useState({ cards: [], name: "", description: "" });
+  const [card, setCard] = useState({ front: "", back: ""});
   const [inputsFromForm, setInputsFromForm] = useState({
-    firstInput: "",
-    secondInput: "",
+    nameInput: "",
+    descriptionInput: "",
   });
   const [formNames, setFormNames] = useState({
     labelFirst: "",
@@ -85,84 +85,85 @@ export default function Form(props) {
           labelSecond: "Back",
           titleCardOrDeck: "Card",
         });
-  }, [isDeck, !newItem]);
+  }, [isDeck, newItem]);
 
   useEffect(() => {
     if (isDeck && !newItem)
       setInputsFromForm({
-        firstInput: deck.name,
-        secondInput: deck.description,
+        nameInput: deck.name,
+        descriptionInput: deck.description,
       });
     if (!isDeck && !newItem)
-      setInputsFromForm({ firstInput: card.front, secondInput: card.back });
-  }, [deck, card]);
+      setInputsFromForm({ nameInput: card.front, descriptionInput: card.back });
+  }, [isDeck, newItem, deck, card]);
 
   function submitHandler(event) {
     event.preventDefault();
     if (newItem && isDeck) {
       createDeck({
-        name: inputsFromForm.firstInput,
-        description: inputsFromForm.secondInput,
+        name: inputsFromForm.nameInput,
+        description: inputsFromForm.descriptionInput,
       });
       history.go(`/`);
     } else if (!newItem && isDeck) {
       updateDeck({
-        name: inputsFromForm.firstInput,
-        description: inputsFromForm.secondInput,
+        ...deck,
+        name: inputsFromForm.nameInput,
+        description: inputsFromForm.descriptionInput,
         id: deckId,
       });
-      history.go(`/decks/${deckId}`);
+       history.go(`/decks/${deckId}`);
     } else if (newItem && !isDeck) {
       createCard(deckId, {
-        front: inputsFromForm.firstInput,
-        back: inputsFromForm.secondInput,
+        front: inputsFromForm.nameInput,
+        back: inputsFromForm.descriptionInput,
       });
       history.go(0);
     } else {
       updateCard({
         ...card,
-        front: inputsFromForm.firstInput,
-        back: inputsFromForm.secondInput,
+        front: inputsFromForm.nameInput,
+        back: inputsFromForm.descriptionInput,
       });
       history.go(`/decks/${deckId}`);
     }
   }
 
+function handleChange(event){
+  event.preventDefault()
+  setInputsFromForm({
+    ...inputsFromForm,
+    [event.target.name]: event.target.value,
+  })
+}
+
   function textAreaOrNot(whatIsIt, formNames) {
     if (whatIsIt) {
       return (
         <div className="form-group">
-          <label for="deckName">{formNames.labelFirst}</label>
+          <label htmlFor="deckName">{formNames.labelFirst}</label>
           <input
             placeholder="Deck Name"
             className="form-control"
             type="text"
             id="deckName"
-            value={inputsFromForm.firstInput}
-            onChange={(event) =>
-              setInputsFromForm({
-                ...inputsFromForm,
-                firstInput: event.target.value,
-              })
-            }
+            name="nameInput"
+            value={inputsFromForm.nameInput}
+            onChange={handleChange}
           ></input>
         </div>
       );
     } else {
       return (
         <div className="form-group">
-          <label for="firstTextArea">{formNames.labelFirst}</label>
+          <label htmlFor="firstTextArea">{formNames.labelFirst}</label>
           <textarea
             className="form-control"
             id="firstTextArea"
+            name="nameInput"
             placeholder="Front side of card"
-            value={inputsFromForm.firstInput}
-            onChange={(event) =>
-              setInputsFromForm({
-                ...inputsFromForm,
-                firstInput: event.target.value,
-              })
-            }
+            value={inputsFromForm.nameInput}
+            onChange={handleChange}
           ></textarea>
         </div>
       );
@@ -181,18 +182,14 @@ export default function Form(props) {
       <form>
         {textAreaOrNot(isDeck, formNames)}
         <div className="form-group">
-          <label for="secondTextArea">{formNames.labelSecond}</label>
+          <label htmlFor="secondTextArea">{formNames.labelSecond}</label>
           <textarea
             className="form-control"
             id="secondTextArea"
+            name="descriptionInput"
             placeholder={isDeck ? "Description of deck" : "Back side of card"}
-            value={inputsFromForm.secondInput}
-            onChange={(event) =>
-              setInputsFromForm({
-                ...inputsFromForm,
-                secondInput: event.target.value,
-              })
-            }
+            value={inputsFromForm.descriptionInput}
+            onChange={handleChange}
           ></textarea>
         </div>
         <div>
